@@ -92,10 +92,12 @@ function findClosest(x, y) {
 
 
 function fiveInARow() {
+   return (testRow() || testCol() || testTLBRDiag() || testTRBLDiag());
+}
+
+function testRow() {
     var color;
     var inARow;
-    
-    //Test Row
 
     for(var j = 0; j < gameArea.size; j++) {
         color = 0;
@@ -114,7 +116,13 @@ function fiveInARow() {
             }
     }
 
-    // Test Column
+    return false;
+}
+
+function testCol() {
+    var color;
+    var inARow;
+
     for(var i = 0; i < gameArea.size; i++) {
         color = 0;
         inARow = 0;
@@ -133,68 +141,68 @@ function fiveInARow() {
         }
     }
 
-    // Test top-left to bottom right diagonal
-    for(var i = 0; i < gameArea.size - 4; i++) {
-        color = 0;
-        inARow = 0;
-        var tempI = i;
-        for(var j = 0; j < gameArea.size ; j++)
-        {
-            if(matrix[tempI][j]==color && matrix[tempI][j] != 0) {
-                inARow++;
-                if(inARow == 5) {
-                    console.log("5 in a left to right diagonal by " + color);
-                    console.log(i +":"+(j-5) + " to " + tempI+":"+j);
-                    return true;
-                }
-                
-                if(tempI < gameArea.size-1) {
-                    tempI++;
-                }
-            }
-            else {
-                inARow = 1;
-                color = matrix[tempI][j];
-                tempI = i;
-            }
-            if(tempI < gameArea.size - 1) {
-                tempI++;
-            }
-            else {
-                tempI = i;
-            }
-        }
-    }
+    return false;
+}
 
-    // Test top-right to bottom-left diagonal
+function testTRBLDiag() {
+    var color;
+    var inARow;
+
     for(var i = 4; i < gameArea.size; i++) {
         color = 0;
         inARow = 0;
         var tempI = i;
         for(var j = 0; j < gameArea.size; j++)
         {
-            if(matrix[tempI][j]==color && matrix[tempI][j] != 0) {
+            inARow = 0;
+            color = matrix[i][j];
+            var tempI = i;
+            var tempJ = j;
+            while(tempJ < gameArea.size && matrix[tempI][tempJ]==color && matrix[tempI][tempJ] != 0) {
+                //console.log("left to right check: " + tempI +":"+tempJ);
                 inARow++;
                 if(inARow == 5) {
+                    console.log("5 in a right to left diagonal by " + color);
+                    console.log(i +":"+j + " to " + tempI+":"+tempJ);
                     return true;
                 }
-            }
-            else {
-                inARow = 1;
-                color = matrix[tempI][j];
-            }
-            if(tempI > 0) {
                 tempI--;
-            }
-            else {
-                tempI = i;
+                tempJ++;
             }
 
         }
     }
 
     return false;
-   
+}
+
+function testTLBRDiag() {
+    var color;
+    var inARow;
+
+    for(var i = 0; i < gameArea.size - 4; i++) {
+        for(var j = 0; j < gameArea.size ; j++)
+        {
+            inARow = 0;
+            color = matrix[i][j];
+            var tempI = i;
+            var tempJ = j;
+            while(tempJ < gameArea.size && matrix[tempI][tempJ]==color && matrix[tempI][tempJ] != 0) {
+                //console.log("left to right check: " + tempI +":"+tempJ);
+                inARow++;
+                if(inARow == 5) {
+                    console.log("5 in a right to left diagonal by " + color);
+                    console.log(i +":"+j + " to " + tempI+":"+tempJ);
+                    return true;
+                }
+                tempI++;
+                tempJ++;
+            }
+            
+        }
+    }
+
+    return false;
 }
 
 function distFrom(x1, y1, x2, y2    ) {
