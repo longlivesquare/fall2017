@@ -1,6 +1,7 @@
 var turn = "white";
 var matrix;
 var victor;
+var time;
 
 function startGame() {
     gameArea.start(15);
@@ -14,6 +15,8 @@ var gameArea = {
         this.canvas.height = 600;
         this.context = this.canvas.getContext("2d");
         this.size = size;
+        time = 0;
+        window.setInterval(timer, 1000);
         matrix = [];
         for(var i=0; i< size; i++) {
             matrix[i] = [];
@@ -38,7 +41,6 @@ var gameArea = {
             this.context.stroke();
         }
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        //this.interval = setInterval(updateGameArea, 20);
         window.addEventListener('click', function (e) {
             //drawPiece(15, turn, e.clientX-7, e.clientY-7);
             if (findClosest(e.x, e.y)) {
@@ -205,6 +207,7 @@ function testTLBRDiag() {
     return false;
 }
 
+// Calculate the distance two points are from each other.
 function distFrom(x1, y1, x2, y2    ) {
     var a = Math.abs(x1 - x2);
     var b = Math.abs(y1 - y2);
@@ -222,4 +225,13 @@ function drawPiece(radius, color, x, y) {
     ctx.beginPath();
     ctx.arc(x,y,radius+1, 0, 2*Math.PI);
     ctx.stroke();
+}
+
+function timer() {
+    time++;
+    var div = document.getElementById("timer");
+    var min = Math.floor(time / 60);
+    var sec = time - min * 60;
+    if (sec < 10) sec = "0" + sec;
+    div.innerHTML = min + ":" + sec;
 }
