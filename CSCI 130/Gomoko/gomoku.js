@@ -1,24 +1,37 @@
-var turn = "white";
+var turn;
 var matrix;
 var victor;
 var time;
 
 function startGame() {
-    (document.getElementById("15").checked ? gameArea.start(15): gameArea.start(19));
+    var bCol = document.getElementById("boardcolor").value;
+    var p1Col = document.getElementById("player1").value;
+    var p2Col = document.getElementById("player2").value;
+    console.log(p2Col);
+    (document.getElementById("15").checked ? gameArea.start(15, bCol, p1Col, p2Col): gameArea.start(19, bCol, p1Col, p2Col));
     console.log("Game started");
 }
 
 var gameArea = {
     canvas : document.createElement("canvas"),
-    turn : "white",
-    start : function(size) {
+    start : function(size, bc, p1, p2) {
         this.canvas.width = 600;
         this.canvas.height = 600;
         this.context = this.canvas.getContext("2d");
         this.size = size;
+        this.p1Col = p1;
+        this.p2Col = p2;
+        this.boardCol = bc;
+        turn = p1;
         time = 0;
+
+        console.log("player 1:" + this.p1Col);
+        console.log("player 2:" + this.p2Col);
+        // Starts timer.
         window.setInterval(timer, 1000);
         matrix = [];
+
+        // Zero the starting matrix
         for(var i=0; i< size; i++) {
             matrix[i] = [];
             for(var j = 0; j < size; j++) {
@@ -26,15 +39,22 @@ var gameArea = {
             }
         }
 
+        // Draw the board
+        this.context.fillStyle = this.boardCol;
+        this.context.fillRect(0, 0, 600, 600);
+
         this.x = ((Number(this.canvas.width)-50) / size);
         this.y = ((Number(this.canvas.height)-50) / size);
     
+        this.context.strokeStyle = invertColor(this.boardCol);
+        // Draws the verticle lines
         for(var i = 0; i < size; i++) {
             this.context.moveTo(this.x * (i + 1), 0);
             this.context.lineTo(this. x * (i + 1), Number(this.canvas.height) - 50 + this.y);
             this.context.stroke();
         }
     
+        // Draws the verticle lines
         for(var j = 0; j < size; j++)
         {
             this.context.moveTo(0, this.y * (j + 1));
@@ -50,7 +70,8 @@ var gameArea = {
                 if (fiveInARow()) {
                     console.log(turn + " is the winner");
                 }
-                turn = (turn == "black" ? "white":"black");
+
+                turn = (turn == gameArea.p1Col ? gameArea.p2Col:gameArea.p1Col);
             }  
         })
     }, 
@@ -236,4 +257,20 @@ function timer() {
     var sec = time - min * 60;
     if (sec < 10) sec = "0" + sec;
     div.innerHTML = min + ":" + sec;
+}
+
+function invertColor(hex) {
+    hex = hex.slice(1);
+    // invert color components
+    var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+    // pad each with zeros and return
+    return '#' + padZero(r) + padZero(g) + padZero(b);
+}
+
+function padZero(str, len) {
+    len = len || 2;
+    var zeros = new Array(len).join('0');
+    return (zeros + str).slice(-len);
 }
