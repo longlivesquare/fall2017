@@ -4,7 +4,8 @@ var victor;
 var time;
 
 function startGame() {
-    gameArea.start(15);
+    (document.getElementById("15").checked ? gameArea.start(15): gameArea.start(19));
+    console.log("Game started");
 }
 
 var gameArea = {
@@ -41,8 +42,9 @@ var gameArea = {
             this.context.stroke();
         }
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        window.addEventListener('click', function (e) {
+        this.canvas.addEventListener('click', function (e) {
             //drawPiece(15, turn, e.clientX-7, e.clientY-7);
+            
             if (findClosest(e.x, e.y)) {
                 console.log("Checking for win");
                 if (fiveInARow()) {

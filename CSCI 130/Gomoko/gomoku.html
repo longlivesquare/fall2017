@@ -2,11 +2,13 @@
     <head>
         <script src="gomoku.js"></script>
     </head>
-    <body onload="startGame()">
+    <body>
         <form>
-            <input type="radio" value="15" name="size">15x15<br>
-            <input type="radio" value="19" name="size">19x19<br>
+            <input type="radio" value="15" name="size" id="15" checked>15x15<br>
+            <input type="radio" value="19" name="size" id="19">19x19<br>
+            <input type="button" onclick="startGame()" value="Start game!">
         </form>
         <div id="timer"></div>
+        <div id="board"></div>
     </body>
 </html>
