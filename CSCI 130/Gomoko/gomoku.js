@@ -2,6 +2,7 @@ var turn;
 var matrix;
 var victor;
 var time;
+var win = false;
 
 function startGame() {
     var bCol = document.getElementById("boardcolor").value;
@@ -16,6 +17,7 @@ var gameArea = {
         this.canvas.width = 600;
         this.canvas.height = 600;
         this.context = this.canvas.getContext("2d");
+        this.playCount = 0; // Counts pieces played
         this.size = size; // Size of board i.e. number of intersections
         this.p1Col = p1; // Color of player 1
         this.p2Col = p2; // Color of player 2
@@ -26,7 +28,7 @@ var gameArea = {
         console.log("player 1:" + this.p1Col);
         console.log("player 2:" + this.p2Col);
         // Starts timer.
-        window.setInterval(timer, 1000);
+        this.timer = window.setInterval(timer, 1000);
         matrix = [];
 
         // Zero the starting matrix
@@ -60,19 +62,33 @@ var gameArea = {
             this.context.stroke();
         }
         document.getElementById("board").appendChild(this.canvas);
+
+        //Handler for clicking on the grid
         this.canvas.addEventListener('click', function (e) {
-            if (findClosest(e.clientX-this.offsetLeft, e.clientY-this.offsetTop)) {
+            if (!win && findClosest(e.clientX-this.offsetLeft, e.clientY-this.offsetTop)) {
+                gameArea.playCount++;
                 console.log("Checking for win");
                 if (fiveInARow()) {
                     console.log(turn + " is the winner");
                     gameArea.clear();
-                    gameArea.context.fillStyle = (turn==gameArea.boardCol?invertColor(turn):turn);
+                    var mygrad = gameArea.context.createLinearGradient(0,0,170,0);
+                    mygrad.addColorStop(0, "magenta");
+                    mygrad.addColorStop(0.5, "blue");
+                    mygrad.addColorStop(1, "red");
+                    gameArea.context.strokeStyle = mygrad;
                     gameArea.context.font = "50px Verdana";
-                    gameArea.context.fillText((turn == gameArea.p1Col?"Player 1 wins":"Player 2 wins"),50,50);
+                    gameArea.context.strokeText((turn == gameArea.p1Col?"Player 1 wins":"Player 2 wins"),50,50);
+                    gameArea.context.font = "20px Verdana";
+                    gameArea.context.strokeText(fmtTime(time),80,90);
+                    gameArea.context.strokeText((turn == gameArea.p1Col?Math.ceil(gameArea.playCount/2):Math.floor(gameArea.playCount/2)) + " rounds played", 80, 120);
                     gameArea.canvas.removeEventListener('click', function(e){});
+                    win = true;
+                    clearInterval(gameArea.timer);
                 }
 
                 turn = (turn == gameArea.p1Col ? gameArea.p2Col:gameArea.p1Col);
+                plays = document.getElementById("plays");
+                plays.innerHTML = "Pieces played<br>Player 1- " + Math.ceil(gameArea.playCount/2) + "  Player 2- "+Math.floor(gameArea.playCount/2);
             }  
         })
     }, 
@@ -258,12 +274,15 @@ function drawPiece(radius, color, x, y) {
 function timer() {
     time++;
     var div = document.getElementById("timer");
-    var min = Math.floor(time / 60);
-    var sec = time - min * 60;
-    if (sec < 10) sec = "0" + sec;
-    div.innerHTML = min + ":" + sec;
+    div.innerHTML = fmtTime(time);
 }
 
+function fmtTime(t) {
+    var min = Math.floor(t / 60);
+    var sec = t - min * 60;
+    if (sec < 10) sec = "0" + sec;
+    return min +":"+sec;
+}
 // Function to invert colors to guarantee that colors don't blend in
 function invertColor(hex) {
     hex = hex.slice(1);
