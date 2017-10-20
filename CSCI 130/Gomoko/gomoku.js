@@ -59,9 +59,9 @@ var gameArea = {
             this.context.lineTo(Number(this.canvas.width) - 50 + this.x, this.y*(j + 1));
             this.context.stroke();
         }
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        document.getElementById("board").appendChild(this.canvas);
         this.canvas.addEventListener('click', function (e) {
-            if (findClosest(e.x, e.y)) {
+            if (findClosest(e.clientX-this.offsetLeft, e.clientY-this.offsetTop)) {
                 console.log("Checking for win");
                 if (fiveInARow()) {
                     console.log(turn + " is the winner");
