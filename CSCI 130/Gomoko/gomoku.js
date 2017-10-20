@@ -7,9 +7,7 @@ function startGame() {
     var bCol = document.getElementById("boardcolor").value;
     var p1Col = document.getElementById("player1").value;
     var p2Col = document.getElementById("player2").value;
-    console.log(p2Col);
     (document.getElementById("15").checked ? gameArea.start(15, bCol, p1Col, p2Col): gameArea.start(19, bCol, p1Col, p2Col));
-    console.log("Game started");
 }
 
 var gameArea = {
@@ -18,12 +16,12 @@ var gameArea = {
         this.canvas.width = 600;
         this.canvas.height = 600;
         this.context = this.canvas.getContext("2d");
-        this.size = size;
-        this.p1Col = p1;
-        this.p2Col = p2;
-        this.boardCol = bc;
-        turn = p1;
-        time = 0;
+        this.size = size; // Size of board i.e. number of intersections
+        this.p1Col = p1; // Color of player 1
+        this.p2Col = p2; // Color of player 2
+        this.boardCol = bc; // Board color
+        turn = p1; // Sets current player to player 1
+        time = 0; 
 
         console.log("player 1:" + this.p1Col);
         console.log("player 2:" + this.p2Col);
@@ -63,8 +61,6 @@ var gameArea = {
         }
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.canvas.addEventListener('click', function (e) {
-            //drawPiece(15, turn, e.clientX-7, e.clientY-7);
-            
             if (findClosest(e.x, e.y)) {
                 console.log("Checking for win");
                 if (fiveInARow()) {
@@ -85,6 +81,7 @@ var gameArea = {
     }
 }
 
+// Finds the closest board interesection from a coordinate and places the appropriate piece there
 function findClosest(x, y) {
     var closestDist = gameArea.canvas.width + gameArea.canvas.height;
     var closestx;
@@ -115,11 +112,12 @@ function findClosest(x, y) {
     return false;
 }
 
-
+// Calls helper functions to test if there are 5 pieces in a row of the same color
 function fiveInARow() {
    return (testRow() || testCol() || testTLBRDiag() || testTRBLDiag());
 }
 
+// Tests each row for 5 in a row
 function testRow() {
     var color;
     var inARow;
@@ -146,6 +144,7 @@ function testRow() {
     return false;
 }
 
+// Tests each column
 function testCol() {
     var color;
     var inARow;
@@ -171,6 +170,7 @@ function testCol() {
     return false;
 }
 
+// Tests each top right to bottom left diagonal
 function testTRBLDiag() {
     var color;
     var inARow;
@@ -203,6 +203,7 @@ function testTRBLDiag() {
     return false;
 }
 
+// Tests each top left to bottom right diagonal
 function testTLBRDiag() {
     var color;
     var inARow;
@@ -239,6 +240,7 @@ function distFrom(x1, y1, x2, y2    ) {
     return Math.sqrt(a*a + b*b);
 }
 
+// Draws a piece of color at the passed in coordinates
 function drawPiece(radius, color, x, y) {   
     ctx = gameArea.context;
     //console.log(color);
@@ -252,6 +254,7 @@ function drawPiece(radius, color, x, y) {
     ctx.stroke();
 }
 
+// timer function that updates every second
 function timer() {
     time++;
     var div = document.getElementById("timer");
@@ -261,6 +264,7 @@ function timer() {
     div.innerHTML = min + ":" + sec;
 }
 
+// Function to invert colors to guarantee that colors don't blend in
 function invertColor(hex) {
     hex = hex.slice(1);
     // invert color components
