@@ -69,6 +69,11 @@ var gameArea = {
                 console.log("Checking for win");
                 if (fiveInARow()) {
                     console.log(turn + " is the winner");
+                    gameArea.clear();
+                    gameArea.context.fillStyle = (turn==gameArea.boardCol?invertColor(turn):turn);
+                    gameArea.context.font = "50px Verdana";
+                    gameArea.context.fillText((turn == gameArea.p1Col?"Player 1 wins":"Player 2 wins"),50,50);
+                    gameArea.canvas.removeEventListener('click', function(e){});
                 }
 
                 turn = (turn == gameArea.p1Col ? gameArea.p2Col:gameArea.p1Col);
@@ -103,15 +108,10 @@ function findClosest(x, y) {
     }
     if(matrix[xInd][yInd] == 0) {
         drawPiece(12,turn, closestx, closesty);
-        console.log(turn);
-        matrix[xInd][yInd] = (turn == "white" ? 1 : -1);
+        matrix[xInd][yInd] = (turn == gameArea.p1Col ? 1 : -1);
         console.log(matrix);
         return true;
     }
-    console.log(closestDist);
-    console.log(closestx+":"+closesty);
-    console.log(matInd);
-    console.log(matrix);
     return false;
 }
 
@@ -132,6 +132,8 @@ function testRow() {
                 inARow++;
                 if(inARow == 5) {
                     console.log("5 in a row by " + color);
+                    console.log(i+":"+j);
+                    console.log(matrix);
                     return true;
                 }
             }
