@@ -65,7 +65,8 @@ var gameArea = {
 
         //Handler for clicking on the grid
         this.canvas.addEventListener('click', function (e) {
-            if (!win && findClosest(e.clientX-this.offsetLeft, e.clientY-this.offsetTop)) {
+            var pos = getMousePos(gameArea.canvas, e);
+            if (!win && findClosest(pos.x, pos.y)) {
                 gameArea.playCount++;
                 console.log("Checking for win");
                 if (fiveInARow()) {
@@ -95,6 +96,14 @@ var gameArea = {
     clear : function(){
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
+}
+
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
 }
 
 // Finds the closest board interesection from a coordinate and places the appropriate piece there
