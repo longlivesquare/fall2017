@@ -9,12 +9,16 @@ import (
 	"strings"
 )
 
+var time int
+
 type Vertex struct {
 	path  []int
 	adj   []*Vertex
 	color int // -1 = white, 0 = grey, 1 =black
 	dist  int
 	id    int
+	disc  int
+	fin   int
 }
 
 type Graph struct {
@@ -39,10 +43,10 @@ func BFS(g *Graph, s *Vertex) {
 	for i := range g.verts {
 		g.verts[i].color = -1 // White
 		g.verts[i].dist = -1
+		g.verts[i].path = make([]int, 0)
 	}
 	s.color = 0
 	s.dist = 0
-	s.path = make([]int, 0)
 
 	queue := make([]*Vertex, 0)
 
@@ -64,6 +68,36 @@ func BFS(g *Graph, s *Vertex) {
 		u.color = 1
 		u.path = append(u.path, u.id)
 	}
+}
+
+func DFS(g *Graph) {
+	for i := range g.verts {
+		g.verts[i].color = -1
+		g.verts[i].path = make([]int, 0)
+	}
+	time = 0
+	for i, v := range g.verts {
+		if v.color == -1 {
+			DFSVisit(g, g.verts[i])
+		}
+	}
+}
+
+func DFSVisit(g *Graph, u *Vertex) {
+	time++
+	u.disc = time
+	u.color = 0
+
+	for i, v := range u.adj {
+		if v.color == -1 {
+			u.adj[i].path = append(u.adj[i].path, u.id)
+			DFSVisit(g, u.adj[i])
+		}
+	}
+
+	u.color = 1
+	time++
+	u.fin = time
 }
 
 // Makes a graph from a passed in filename
@@ -119,6 +153,15 @@ func printBFS(g *Graph) {
 
 	for _, v := range g.verts {
 		fmt.Printf("%d : %d %v\n", v.id, v.dist, v.path) // id, dist, path
+	}
+}
+
+func printDFS(g *Graph) {
+	DFS(g)
+
+	fmt.Println("Vertex: Discover/Finish")
+	for _, v := range g.verts {
+		fmt.Printf("%d : %d/%d")
 	}
 }
 
