@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -10,19 +11,29 @@ import (
 )
 
 var time int
+var tree []Edge
+var back []Edge
+var forw []Edge
+var cros []Edge
 
 type Vertex struct {
 	path  []int
 	adj   []*Vertex
 	color int // -1 = white, 0 = grey, 1 =black
-	dist  int
+	dist  float64
 	id    int
-	disc  int
-	fin   int
+	disc  int // Vertex first discovered in DFS
+	fin   int // Vertex finished in DFS
+}
+
+type Edge struct {
+	x int
+	y int
 }
 
 type Graph struct {
-	verts []*Vertex
+	verts  []*Vertex
+	topOrd []int
 }
 
 type sortGraph []*Vertex
@@ -39,10 +50,30 @@ func (v sortGraph) Less(i, j int) bool {
 	return v[i].id < v[j].id
 }
 
+type sortEdge []Edge
+
+func (e sortEdge) Len() int {
+	return len(e)
+}
+
+func (e sortEdge) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
+}
+
+func (e sortEdge) Less(i, j int) bool {
+	if e[i].x < e[j].x {
+		return true
+	} else if e[i].x == e[j].x {
+		return e[i].y < e[j].y
+	} else {
+		return false
+	}
+}
+
 func BFS(g *Graph, s *Vertex) {
 	for i := range g.verts {
 		g.verts[i].color = -1 // White
-		g.verts[i].dist = -1
+		g.verts[i].dist = math.Inf(1.0)
 		g.verts[i].path = make([]int, 0)
 	}
 	s.color = 0
@@ -91,18 +122,29 @@ func DFSVisit(g *Graph, u *Vertex) {
 	for i, v := range u.adj {
 		if v.color == -1 {
 			u.adj[i].path = append(u.adj[i].path, u.id)
+			addTree(Edge{u.id, v.id})
 			DFSVisit(g, u.adj[i])
+		} else if v.color == 0 {
+			addBack(Edge{u.id, v.id})
+		} else { //v.color == 1
+			if v.disc > u.disc {
+				addForw(Edge{u.id, v.id})
+			} else {
+				addCros(Edge{u.id, v.id})
+			}
 		}
 	}
 
 	u.color = 1
 	time++
 	u.fin = time
+	g.topOrd = append([]int{u.id}, g.topOrd...)
 }
 
 // Makes a graph from a passed in filename
 func makeGraph(s string) Graph {
 	g := Graph{}
+	g.topOrd = make([]int, 0)
 	f, err := os.Open(s)
 	check(err)
 	scanner := bufio.NewScanner(f)
@@ -149,20 +191,73 @@ func makeGraph(s string) Graph {
 func printBFS(g *Graph) {
 	BFS(g, g.verts[0])
 
+	fmt.Println("Breadth First Search")
 	fmt.Println("Vertex: Distance [Path]")
 
 	for _, v := range g.verts {
-		fmt.Printf("%d : %d %v\n", v.id, v.dist, v.path) // id, dist, path
+		fmt.Printf("%d : %f %v\n", v.id, math.Trunc(v.dist), v.path) // id, dist, path
 	}
 }
 
 func printDFS(g *Graph) {
+	tree = make([]Edge, 0)
+	cros = make([]Edge, 0)
+	back = make([]Edge, 0)
+	forw = make([]Edge, 0)
+
 	DFS(g)
 
+	fmt.Println("\nDepth First Search")
 	fmt.Println("Vertex: Discover/Finish")
 	for _, v := range g.verts {
-		fmt.Printf("%d : %d/%d")
+		fmt.Printf("%d : %d/%d\n", v.id, v.disc, v.fin)
 	}
+
+	sort.Sort(sortEdge(tree))
+	fmt.Print("Tree: [")
+	for _, e := range tree {
+		fmt.Printf("(%d, %d) ", e.x, e.y)
+	}
+	fmt.Println("]")
+
+	sort.Sort(sortEdge(back))
+	fmt.Print("Back: [")
+	for _, e := range back {
+		fmt.Printf("(%d, %d) ", e.x, e.y)
+	}
+	fmt.Println("]")
+
+	sort.Sort(sortEdge(forw))
+	fmt.Print("Forward: [")
+	for _, e := range forw {
+		fmt.Printf("(%d, %d) ", e.x, e.y)
+	}
+	fmt.Println("]")
+
+	sort.Sort(sortEdge(cros))
+	fmt.Print("Cross: [")
+	for _, e := range cros {
+		fmt.Printf("(%d, %d) ", e.x, e.y)
+	}
+	fmt.Println("]")
+
+	fmt.Printf("Vertices in topological order: %v\n\n", g.topOrd)
+}
+
+func addTree(e Edge) {
+	tree = append(tree, e)
+}
+
+func addForw(e Edge) {
+	forw = append(forw, e)
+}
+
+func addCros(e Edge) {
+	cros = append(cros, e)
+}
+
+func addBack(e Edge) {
+	back = append(back, e)
 }
 
 func check(e error) {
@@ -172,7 +267,18 @@ func check(e error) {
 }
 
 func main() {
-	g := makeGraph("graph1.dat")
-	printBFS(&g)
+	fmt.Println("Graph 1")
+	g1 := makeGraph("graph1.dat")
+	printBFS(&g1)
+	printDFS(&g1)
 
+	fmt.Println("\nGraph 2")
+	g2 := makeGraph("graph2.dat")
+	printBFS(&g2)
+	printDFS(&g2)
+
+	fmt.Println("\nGraph 3")
+	g3 := makeGraph("graph3.dat")
+	printBFS(&g3)
+	printDFS(&g3)
 }
