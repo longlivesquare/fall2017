@@ -10,12 +10,6 @@ import (
 	"strings"
 )
 
-var time int    // Used to track when a vertex is first and last handled in DFS
-var tree []Edge // Used to keep track of tree edges in DFS
-var back []Edge // Used to keep track of back edges in DFS
-var forw []Edge // Used to keep track of forward edges in DFS
-var cros []Edge // Used to keep track of cross edges in DFS
-
 // Vertex represents a vertex in a graph with properties to help with BFS and DFS
 type Vertex struct {
 	path  []int     // Holds the path
@@ -35,7 +29,12 @@ type Edge struct {
 
 type Graph struct {
 	verts  []*Vertex
-	topOrd []int // DFS topological ordering
+	topOrd []int  // DFS topological ordering
+	time   int    // Used to keep track of order vertices are visited in DFS
+	tree   []Edge // Used to keep track of tree edges in DFS
+	back   []Edge // Used to keep track of back edges in DFS
+	forw   []Edge // Used to keep track of forward edges in DFS
+	cros   []Edge // Used to keep track of cross edges in DFS
 }
 
 // Used to sort a graph by the id.
@@ -120,7 +119,12 @@ func DFS(g *Graph) {
 		g.verts[i].color = -1            // Set color to white
 		g.verts[i].path = make([]int, 0) // Empties path
 	}
-	time = 0 // Zeroes time at start of DFS
+	g.time = 0 // Zeroes time at start of DFS
+	g.back = make([]Edge, 0)
+	g.cros = make([]Edge, 0)
+	g.forw = make([]Edge, 0)
+	g.tree = make([]Edge, 0)
+
 	for i, v := range g.verts {
 		// If color is white, visit vertex
 		if v.color == -1 {
@@ -131,31 +135,31 @@ func DFS(g *Graph) {
 
 // DFSVisit is a helper functioin where the meat of the DFS algorithm is handled
 func DFSVisit(g *Graph, u *Vertex) {
-	time++        // Increase time every time DFSVisit is called
-	u.disc = time // Sets vertex first discovered to current time
-	u.color = 0   // Color of vertex is set to grey
+	g.time++        // Increase time every time DFSVisit is called
+	u.disc = g.time // Sets vertex first discovered to current time
+	u.color = 0     // Color of vertex is set to grey
 
 	// Process all adjactent vertices
 	for i, v := range u.adj {
 		// If white, visit adjacent and add edge to the tree list
 		if v.color == -1 {
 			u.adj[i].path = append(u.adj[i].path, u.id)
-			tree = append(tree, Edge{u.id, v.id})
+			g.tree = append(g.tree, Edge{u.id, v.id})
 			DFSVisit(g, u.adj[i])
 		} else if v.color == 0 { // If grey, add edge to the back list
-			back = append(back, Edge{u.id, v.id})
+			g.back = append(g.back, Edge{u.id, v.id})
 		} else { // If black,
 			if v.disc > u.disc { // If u was discovered before adjacent vertex, add edge to forward list
-				forw = append(forw, Edge{u.id, v.id})
+				g.forw = append(g.forw, Edge{u.id, v.id})
 			} else { // Otherwise add edge to cross list
-				cros = append(cros, Edge{u.id, v.id})
+				g.cros = append(g.cros, Edge{u.id, v.id})
 			}
 		}
 	}
 
 	u.color = 1                                 // Set color to black when done
-	time++                                      // Increase time also when finishing vertex
-	u.fin = time                                // Set finish time
+	g.time++                                    // Increase time also when finishing vertex
+	u.fin = g.time                              // Set finish time
 	g.topOrd = append([]int{u.id}, g.topOrd...) // Add u to the front of the topological order list
 }
 
@@ -221,11 +225,6 @@ func printBFS(g *Graph) {
 
 // printDFS runs DFS and prints info
 func printDFS(g *Graph) {
-	tree = make([]Edge, 0)
-	cros = make([]Edge, 0)
-	back = make([]Edge, 0)
-	forw = make([]Edge, 0)
-
 	DFS(g)
 
 	fmt.Println("\nDepth First Search")
@@ -234,30 +233,30 @@ func printDFS(g *Graph) {
 		fmt.Printf("%d : %d/%d\n", v.id, v.disc, v.fin)
 	}
 
-	sort.Sort(sortEdge(tree))
+	sort.Sort(sortEdge(g.tree))
 	fmt.Print("Tree: [")
-	for _, e := range tree {
+	for _, e := range g.tree {
 		fmt.Printf("(%d, %d) ", e.x, e.y)
 	}
 	fmt.Println("]")
 
-	sort.Sort(sortEdge(back))
+	sort.Sort(sortEdge(g.back))
 	fmt.Print("Back: [")
-	for _, e := range back {
+	for _, e := range g.back {
 		fmt.Printf("(%d, %d) ", e.x, e.y)
 	}
 	fmt.Println("]")
 
-	sort.Sort(sortEdge(forw))
+	sort.Sort(sortEdge(g.forw))
 	fmt.Print("Forward: [")
-	for _, e := range forw {
+	for _, e := range g.forw {
 		fmt.Printf("(%d, %d) ", e.x, e.y)
 	}
 	fmt.Println("]")
 
-	sort.Sort(sortEdge(cros))
+	sort.Sort(sortEdge(g.cros))
 	fmt.Print("Cross: [")
-	for _, e := range cros {
+	for _, e := range g.cros {
 		fmt.Printf("(%d, %d) ", e.x, e.y)
 	}
 	fmt.Println("]")
