@@ -10,32 +10,35 @@ import (
 	"strings"
 )
 
-var time int
-var tree []Edge
-var back []Edge
-var forw []Edge
-var cros []Edge
+var time int    // Used to track when a vertex is first and last handled in DFS
+var tree []Edge // Used to keep track of tree edges in DFS
+var back []Edge // Used to keep track of back edges in DFS
+var forw []Edge // Used to keep track of forward edges in DFS
+var cros []Edge // Used to keep track of cross edges in DFS
 
+// Vertex represents a vertex in a graph with properties to help with BFS and DFS
 type Vertex struct {
-	path  []int
-	adj   []*Vertex
-	color int // -1 = white, 0 = grey, 1 =black
-	dist  float64
+	path  []int     // Holds the path
+	adj   []*Vertex // Array to hold adjacent vertices
+	color int       // -1 = white, 0 = grey, 1 =black
+	dist  float64   // Distance to reach vertex in BFS
 	id    int
 	disc  int // Vertex first discovered in DFS
 	fin   int // Vertex finished in DFS
 }
 
+// Edge represents a path from on vertex to another.
 type Edge struct {
-	x int
-	y int
+	x int // the id of the starting vertex
+	y int // the id of the ending vertex
 }
 
 type Graph struct {
 	verts  []*Vertex
-	topOrd []int
+	topOrd []int // DFS topological ordering
 }
 
+// Used to sort a graph by the id.
 type sortGraph []*Vertex
 
 func (v sortGraph) Len() int {
@@ -50,6 +53,7 @@ func (v sortGraph) Less(i, j int) bool {
 	return v[i].id < v[j].id
 }
 
+// Used to sort a list of edges. First by the x(first) vertex, then by the y(second)
 type sortEdge []Edge
 
 func (e sortEdge) Len() int {
@@ -70,78 +74,93 @@ func (e sortEdge) Less(i, j int) bool {
 	}
 }
 
+// BFS implements Breadth First Search.
 func BFS(g *Graph, s *Vertex) {
+	// First set all the vertices to the default values
 	for i := range g.verts {
-		g.verts[i].color = -1 // White
-		g.verts[i].dist = math.Inf(1.0)
-		g.verts[i].path = make([]int, 0)
+		g.verts[i].color = -1            // White
+		g.verts[i].dist = math.Inf(1.0)  // Set distance to unvisited vertices to infinity
+		g.verts[i].path = make([]int, 0) // Empties path
 	}
-	s.color = 0
-	s.dist = 0
+	s.color = 0 // Set starting vertex to grey
+	s.dist = 0  // Set distance from the start to 0, since s is the start
 
+	// Queue to put new vertices into
 	queue := make([]*Vertex, 0)
 
+	// Start with s in the queue
 	queue = append(queue, s)
 
+	// As long as the queue is not empty, keep going through and processing the next vertex
 	for len(queue) != 0 {
+		// Pop the next vertex off the queue
 		u := queue[0]
 		queue = queue[1:]
 
+		// Handle all the adjacent vertices
 		for i, v := range u.adj {
+			// if the adjacent vertex is white (unhandled), set it to the defaults and add it to the queue
 			if v.color == -1 {
 				u.adj[i].color = 0
-				u.adj[i].dist = u.dist + 1
-				u.adj[i].path = append(u.adj[i].path, u.path...)
-				u.adj[i].path = append(u.adj[i].path, u.id)
-				queue = append(queue, u.adj[i])
+				u.adj[i].dist = u.dist + 1                       // Distant is equal to previous vertex +1
+				u.adj[i].path = append(u.adj[i].path, u.path...) // Set path to the path to the previous vertex
+				u.adj[i].path = append(u.adj[i].path, u.id)      // And then add the previous vertex
+				queue = append(queue, u.adj[i])                  // Finally add it to the queue
 			}
 		}
-		u.color = 1
+		u.color = 1 // Change color of handled vertex to black after finished with it
 		u.path = append(u.path, u.id)
 	}
 }
 
+// DFS implements Depth First Search.
 func DFS(g *Graph) {
+	// Sets all vertices to default values
 	for i := range g.verts {
-		g.verts[i].color = -1
-		g.verts[i].path = make([]int, 0)
+		g.verts[i].color = -1            // Set color to white
+		g.verts[i].path = make([]int, 0) // Empties path
 	}
-	time = 0
+	time = 0 // Zeroes time at start of DFS
 	for i, v := range g.verts {
+		// If color is white, visit vertex
 		if v.color == -1 {
 			DFSVisit(g, g.verts[i])
 		}
 	}
 }
 
+// DFSVisit is a helper functioin where the meat of the DFS algorithm is handled
 func DFSVisit(g *Graph, u *Vertex) {
-	time++
-	u.disc = time
-	u.color = 0
+	time++        // Increase time every time DFSVisit is called
+	u.disc = time // Sets vertex first discovered to current time
+	u.color = 0   // Color of vertex is set to grey
 
+	// Process all adjactent vertices
 	for i, v := range u.adj {
+		// If white, visit adjacent and add edge to the tree list
 		if v.color == -1 {
 			u.adj[i].path = append(u.adj[i].path, u.id)
-			addTree(Edge{u.id, v.id})
+			tree = append(tree, Edge{u.id, v.id})
 			DFSVisit(g, u.adj[i])
-		} else if v.color == 0 {
-			addBack(Edge{u.id, v.id})
-		} else { //v.color == 1
-			if v.disc > u.disc {
-				addForw(Edge{u.id, v.id})
-			} else {
-				addCros(Edge{u.id, v.id})
+		} else if v.color == 0 { // If grey, add edge to the back list
+			back = append(back, Edge{u.id, v.id})
+		} else { // If black,
+			if v.disc > u.disc { // If u was discovered before adjacent vertex, add edge to forward list
+				forw = append(forw, Edge{u.id, v.id})
+			} else { // Otherwise add edge to cross list
+				cros = append(cros, Edge{u.id, v.id})
 			}
 		}
 	}
 
-	u.color = 1
-	time++
-	u.fin = time
-	g.topOrd = append([]int{u.id}, g.topOrd...)
+	u.color = 1                                 // Set color to black when done
+	time++                                      // Increase time also when finishing vertex
+	u.fin = time                                // Set finish time
+	g.topOrd = append([]int{u.id}, g.topOrd...) // Add u to the front of the topological order list
 }
 
-// Makes a graph from a passed in filename
+// makeGraph creates a graph from passed in file. The file should be a list of start and end vertices.
+// Each pair is on a different line.
 func makeGraph(s string) Graph {
 	g := Graph{}
 	g.topOrd = make([]int, 0)
@@ -188,6 +207,7 @@ func makeGraph(s string) Graph {
 	return g
 }
 
+// printBFS runs BFS and then prints out the distances and paths for each vertex
 func printBFS(g *Graph) {
 	BFS(g, g.verts[0])
 
@@ -199,6 +219,7 @@ func printBFS(g *Graph) {
 	}
 }
 
+// printDFS runs DFS and prints info
 func printDFS(g *Graph) {
 	tree = make([]Edge, 0)
 	cros = make([]Edge, 0)
@@ -244,22 +265,7 @@ func printDFS(g *Graph) {
 	fmt.Printf("Vertices in topological order: %v\n\n", g.topOrd)
 }
 
-func addTree(e Edge) {
-	tree = append(tree, e)
-}
-
-func addForw(e Edge) {
-	forw = append(forw, e)
-}
-
-func addCros(e Edge) {
-	cros = append(cros, e)
-}
-
-func addBack(e Edge) {
-	back = append(back, e)
-}
-
+// Check is used to stop program if any IO operations produce an error
 func check(e error) {
 	if e != nil {
 		panic(e)
