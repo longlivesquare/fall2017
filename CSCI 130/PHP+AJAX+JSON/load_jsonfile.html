@@ -1,0 +1,157 @@
+<!DOCTYPE html lang="en">
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>My page with Javascript and JSON (Lab session)</title>
+
+
+<style>
+html {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
+
+body {
+  width: 1000px;
+  margin: 0 auto;
+}
+
+h1, h2 {
+  font-family: 'Rockwell', cursive;
+}
+
+
+/*
+While em is relative to the font-size of its direct or nearest parent, 
+rem is only relative to the html (root) font-size.
+*/
+
+/* header styles */
+h1 {
+  font-size: 4rem; 
+  text-align: center;
+}
+
+header p {
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-align: left;
+}
+
+/* section styles */
+section article {
+  width: 33%;
+  float: left;
+}
+section p {
+  margin: 5px 0;
+}
+section ul {
+  margin-top: 0;
+}
+h2 {
+  font-size: 2.5rem;
+  letter-spacing: -5px;
+  margin-bottom: 10px;
+}
+
+</style>
+
+
+</head>
+<body>
+
+<form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="get">
+  <fieldset>
+    <h2>JSON File</h2>
+     <input type='file' id='fileinput'>
+     <input type='button' id='btnLoad' value='Load' onclick='loadFile();'>
+  </fieldset>
+</form>
+
+
+<!-- the JSON example is taken from the mozilla website -->  
+
+<!-- create the default structure of the html page we want
+so we can access the header and the section through the DOM -->
+<header>
+</header>
+
+<section>
+</section>
+
+<script type="text/javascript">
+
+  var header = document.querySelector('header');
+  var section = document.querySelector('section');
+
+  // With this function we read the file locally !!!
+  // but later we will see how to get it from the server...but we will need a server first :D
+  function loadFile() {
+    var input, file, fr;
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4) {
+          var jsonObj = JSON.parse(xhttp.responseText);
+          populateHeader(jsonObj);
+          showHeroes(jsonObj);
+      }
+    };
+
+    xhttp.open("get", "superheroes.json", true);
+    xhttp.send();
+
+  }
+  
+// Access the nodes in the DOM and update based on the content of the jsonObject
+// If you reload the file, it will be added to the existing elements in the page !!!
+function populateHeader(jsonObj) {
+  var myH1 = document.createElement('h1');
+  myH1.textContent = jsonObj['squadName'];
+  header.appendChild(myH1);
+
+  var myPara = document.createElement('p');
+  myPara.textContent = 'Hometown: ' + jsonObj['homeTown'] + ' // Formed: ' + jsonObj['formed'];
+  header.appendChild(myPara);
+}
+
+function showHeroes(jsonObj) {
+  var heroes = jsonObj['members'];
+      
+  for (var i = 0; i < heroes.length; i++) {
+    var myArticle = document.createElement('article');
+    var myH2 = document.createElement('h2');
+    var myPara1 = document.createElement('p');
+    var myPara2 = document.createElement('p');
+    var myPara3 = document.createElement('p');
+    var myList = document.createElement('ul');
+
+    myH2.textContent = heroes[i].name;
+    myPara1.textContent = 'Secret identity: ' + heroes[i].secretIdentity;
+    myPara2.textContent = 'Age: ' + heroes[i].age;
+    myPara3.textContent = 'Superpowers:';
+        
+    var superPowers = heroes[i].powers;
+    for (var j = 0; j < superPowers.length; j++) {
+      var listItem = document.createElement('li');
+      listItem.textContent = superPowers[j];
+      myList.appendChild(listItem);
+    }
+
+    myArticle.appendChild(myH2);
+    myArticle.appendChild(myPara1);
+    myArticle.appendChild(myPara2);
+    myArticle.appendChild(myPara3);
+    myArticle.appendChild(myList);
+
+    section.appendChild(myArticle);
+  }
+}
+  
+</script>
+
+
+
+
+</body>
+</html>
